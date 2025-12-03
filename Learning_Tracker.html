@@ -189,7 +189,7 @@
         }
 
         .sessions-list {
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
         }
 
@@ -200,6 +200,13 @@
             margin-bottom: 10px;
             border-radius: 4px;
             font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .session-content {
+            flex: 1;
         }
 
         .session-date {
@@ -223,6 +230,25 @@
             margin-right: 8px;
         }
 
+        .session-delete {
+            background: none;
+            border: none;
+            color: var(--color-error);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .session-delete:hover {
+            background: rgba(192, 21, 47, 0.1);
+            border-radius: 3px;
+        }
+
         .ai-summary {
             background: rgba(245, 158, 11, 0.08);
             border-left: 3px solid #a84d2f;
@@ -231,7 +257,7 @@
             border-radius: 4px;
             font-size: 13px;
             color: var(--color-text);
-            font-style: italic;
+            line-height: 1.6;
         }
 
         .empty-state {
@@ -296,6 +322,7 @@
             text-align: center;
             cursor: pointer;
             transition: all 150ms;
+            border: none;
         }
 
         .topic-tag:hover {
@@ -306,13 +333,31 @@
             background: var(--color-primary);
             color: white;
         }
+
+        .export-import {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .export-import button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        small {
+            color: var(--color-text-secondary);
+            display: block;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>📚 AI Learning Tracker</h1>
-            <p class="subtitle">Track your embedded systems & interview prep with AI-powered insights</p>
+            <p class="subtitle">Track embedded systems & interview prep with AI insights</p>
         </header>
 
         <div id="alert" class="hidden"></div>
@@ -377,14 +422,19 @@
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                     </div>
-                    <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                    <small>
                         <span id="weeklyHours">0</span> / 20 hours this week
                     </small>
                 </div>
 
                 <h3 style="margin-top: 20px; font-size: 16px;">AI Recommendations</h3>
                 <div id="aiRecommendations" style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.6;">
-                    <p style="margin: 0;">Log your first session to get personalized recommendations based on embedded systems & interview prep.</p>
+                    <p style="margin: 0;">Log your first session to get personalized recommendations.</p>
+                </div>
+
+                <div class="export-import">
+                    <button class="btn-secondary" onclick="exportData()">📥 Export</button>
+                    <button class="btn-secondary" onclick="importData()">📤 Import</button>
                 </div>
             </div>
         </div>
@@ -420,11 +470,13 @@
         function renderTopicTags() {
             const grid = document.getElementById('topicsGrid');
             TOPICS.forEach(topic => {
-                const tag = document.createElement('div');
+                const tag = document.createElement('button');
                 tag.className = 'topic-tag';
                 tag.textContent = topic;
+                tag.type = 'button';
                 tag.onclick = () => {
                     document.getElementById('customTopic').value = topic;
+                    document.querySelectorAll('.topic-tag').forEach(t => t.classList.remove('selected'));
                     tag.classList.add('selected');
                 };
                 grid.appendChild(tag);
@@ -470,14 +522,27 @@
 
             list.innerHTML = sessions.map(s => `
                 <div class="session-item">
-                    <div class="session-date">${new Date(s.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
-                    <div class="session-topic"><strong>${s.topic}</strong></div>
-                    <div>
-                        <span class="session-hours">${s.hours}h</span>
-                        <span style="color: var(--color-text-secondary);">${s.notes.substring(0, 100)}${s.notes.length > 100 ? '...' : ''}</span>
+                    <div class="session-content">
+                        <div class="session-date">${new Date(s.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                        <div class="session-topic"><strong>${s.topic}</strong></div>
+                        <div>
+                            <span class="session-hours">${s.hours}h</span>
+                            <span style="color: var(--color-text-secondary);">${s.notes.substring(0, 80)}${s.notes.length > 80 ? '...' : ''}</span>
+                        </div>
                     </div>
+                    <button class="session-delete" onclick="deleteSession(${s.id})" title="Delete">✕</button>
                 </div>
             `).join('');
+        }
+
+        function deleteSession(id) {
+            const sessions = getSessions();
+            const filtered = sessions.filter(s => s.id !== id);
+            localStorage.setItem('learningSessions', JSON.stringify(filtered));
+            loadSessions();
+            updateStats();
+            generateAIRecommendations();
+            showAlert('Session deleted', 'success');
         }
 
         function updateStats() {
@@ -500,15 +565,15 @@
             const sessions = getSessions();
             if (sessions.length === 0) return;
 
-            const topics = sessions.slice(0, 3).map(s => s.topic).join(', ');
+            const topics = [...new Set(sessions.slice(0, 5).map(s => s.topic))].join(', ');
             const recentHours = sessions.slice(0, 5).reduce((sum, s) => sum + s.hours, 0);
 
             const recommendations = [
-                `📈 Great progress! You've logged ${recentHours}h in the last few sessions.`,
-                `🎯 Focus on ${topics} - consistency builds mastery for senior interviews.`,
-                `💡 Next: Dive deeper into AUTOSAR & functional safety (ISO 26262).`,
+                `📈 Great progress! You've logged ${recentHours.toFixed(1)}h in recent sessions.`,
+                `🎯 Focus areas: ${topics}. Consistency builds mastery for senior interviews.`,
+                `💡 Next: Dive deeper into AUTOSAR & ISO 26262 (functional safety).`,
                 `⚡ Pro tip: Combine C++ coding with embedded systems theory daily.`,
-                `🔄 Review: Schedule weekly practice problems on LeetCode hard mode.`
+                `🔄 Review: Schedule weekly practice on LeetCode hard mode for interviews.`
             ];
 
             document.getElementById('aiRecommendations').innerHTML = 
@@ -520,6 +585,44 @@
             document.getElementById('sessionHours').value = '1';
             document.getElementById('sessionNotes').value = '';
             document.querySelectorAll('.topic-tag').forEach(tag => tag.classList.remove('selected'));
+        }
+
+        function exportData() {
+            const sessions = getSessions();
+            const json = JSON.stringify(sessions, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `learning_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showAlert('Data exported successfully', 'success');
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if (!Array.isArray(data)) throw new Error('Invalid format');
+                        localStorage.setItem('learningSessions', JSON.stringify(data));
+                        loadSessions();
+                        updateStats();
+                        generateAIRecommendations();
+                        showAlert(`Imported ${data.length} sessions`, 'success');
+                    } catch (err) {
+                        showAlert('Import failed: ' + err.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
         }
 
         function showAlert(message, type) {
