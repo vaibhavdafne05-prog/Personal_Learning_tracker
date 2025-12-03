@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning Tracker</title>
+    <style>
+        :root {
+            --color-primary: #208091;
+            --color-primary-hover: #1a6473;
+            --color-bg: #fcfcf9;
+            --color-surface: #ffffff;
+            --color-text: #134252;
+            --color-text-secondary: #627c81;
+            --color-border: rgba(94, 82, 64, 0.2);
+            --color-success: #208091;
+            --color-warning: #a84d2f;
+            --color-error: #c0152f;
+            --radius-base: 8px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            color: var(--color-text);
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--color-surface);
+            border-radius: var(--radius-base);
+            border: 1px solid var(--color-border);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card h2 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            color: var(--color-text);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--color-text);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--color-text);
+            background: white;
+            transition: border-color 150ms;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(32, 128, 145, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 150ms;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: rgba(94, 82, 64, 0.12);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(94, 82, 64, 0.2);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--color-error);
+            border: 1px solid var(--color-error);
+        }
+
+        .btn-danger:hover {
+            background: rgba(192, 21, 47, 0.08);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: rgba(32, 128, 145, 0.08);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin-top: 4px;
+        }
+
+        .sessions-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .session-item {
+            background: rgba(32, 128, 145, 0.04);
+            border-left: 3px solid var(--color-primary);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .session-date {
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 4px;
+        }
+
+        .session-topic {
+            color: var(--color-text-secondary);
+            margin-bottom: 3px;
+        }
+
+        .session-hours {
+            display: inline-block;
+            background: var(--color-primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+
+        .ai-summary {
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 3px solid #a84d2f;
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--color-text);
+            font-style: italic;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--color-text-secondary);
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(94, 82, 64, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-success);
+            border-radius: 4px;
+            transition: width 300ms;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .alert-success {
+            background: rgba(32, 128, 145, 0.1);
+            color: var(--color-success);
+            border: 1px solid rgba(32, 128, 145, 0.2);
+        }
+
+        .alert-error {
+            background: rgba(192, 21, 47, 0.1);
+            color: var(--color-error);
+            border: 1px solid rgba(192, 21, 47, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .topic-tag {
+            padding: 6px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            background: rgba(32, 128, 145, 0.12);
+            color: var(--color-primary);
+            text-align: center;
+            cursor: pointer;
+            transition: all 150ms;
+        }
+
+        .topic-tag:hover {
+            background: rgba(32, 128, 145, 0.2);
+        }
+
+        .topic-tag.selected {
+            background: var(--color-primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 AI Learning Tracker</h1>
+            <p class="subtitle">Track your embedded systems & interview prep with AI-powered insights</p>
+        </header>
+
+        <div id="alert" class="hidden"></div>
+
+        <div class="layout">
+            <!-- Log Session Card -->
+            <div class="card">
+                <h2>Log Learning Session</h2>
+                
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="sessionDate">
+                </div>
+
+                <div class="form-group">
+                    <label>Quick Topics</label>
+                    <div class="topics-grid" id="topicsGrid"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Custom Topic</label>
+                    <input type="text" id="customTopic" placeholder="e.g., AUTOSAR, CAN bus, C++ templates">
+                </div>
+
+                <div class="form-group">
+                    <label>Hours Studied</label>
+                    <input type="number" id="sessionHours" min="0.5" step="0.5" value="1">
+                </div>
+
+                <div class="form-group">
+                    <label>Notes / What You Learned</label>
+                    <textarea id="sessionNotes" placeholder="Describe what you studied today..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="logSession()">Log Session</button>
+                    <button class="btn-secondary" onclick="clearForm()">Clear</button>
+                </div>
+            </div>
+
+            <!-- Stats & Summary Card -->
+            <div class="card">
+                <h2>Learning Progress</h2>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalHours">0</div>
+                        <div class="stat-label">Total Hours</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="sessionCount">0</div>
+                        <div class="stat-label">Sessions</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="topicCount">0</div>
+                        <div class="stat-label">Topics</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label>Weekly Goal: 20 hours</label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <small style="color: var(--color-text-secondary); display: block; margin-top: 4px;">
+                        <span id="weeklyHours">0</span> / 20 hours this week
+                    </small>
+                </div>
+
+                <h3 style="margin-top: 20px; font-size: 16px;">AI Recommendations</h3>
+                <div id="aiRecommendations" style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.6;">
+                    <p style="margin: 0;">Log your first session to get personalized recommendations based on embedded systems & interview prep.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Sessions -->
+        <div class="card">
+            <h2>📋 Recent Learning Sessions</h2>
+            <div class="sessions-list" id="sessionsList">
+                <div class="empty-state">No sessions logged yet. Start by logging your first session!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOPICS = [
+            'C++', 'Embedded Systems', 'AUTOSAR', 'CAN Bus',
+            'Linux Kernel', 'Cybersecurity', 'Interview Prep', 'Trading Bot'
+        ];
+
+        // Initialize
+        function init() {
+            setToday();
+            renderTopicTags();
+            loadSessions();
+            updateStats();
+        }
+
+        function setToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('sessionDate').value = today;
+        }
+
+        function renderTopicTags() {
+            const grid = document.getElementById('topicsGrid');
+            TOPICS.forEach(topic => {
+                const tag = document.createElement('div');
+                tag.className = 'topic-tag';
+                tag.textContent = topic;
+                tag.onclick = () => {
+                    document.getElementById('customTopic').value = topic;
+                    tag.classList.add('selected');
+                };
+                grid.appendChild(tag);
+            });
+        }
+
+        function logSession() {
+            const date = document.getElementById('sessionDate').value;
+            const topic = document.getElementById('customTopic').value || 'General';
+            const hours = parseFloat(document.getElementById('sessionHours').value);
+            const notes = document.getElementById('sessionNotes').value;
+
+            if (!date || !hours || !notes) {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
+
+            const session = { date, topic, hours, notes, id: Date.now() };
+            const sessions = getSessions();
+            sessions.unshift(session);
+            localStorage.setItem('learningSessions', JSON.stringify(sessions));
+
+            showAlert(`Session logged: ${hours}h on ${topic}`, 'success');
+            clearForm();
+            loadSessions();
+            updateStats();
+            generateAIRecommendations();
+        }
+
+        function getSessions() {
+            const data = localStorage.getItem('learningSessions');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function loadSessions() {
+            const sessions = getSessions();
+            const list = document.getElementById('sessionsList');
+            
+            if (sessions.length === 0) {
+                list.innerHTML = '<div class="empty-state">No sessions logged yet. Start tracking your learning!</div>';
+                return;
+            }
+
+            list.innerHTML = sessions.map(s => `
+                <div class="session-item">
+                    <div class="session-date">${new Date(s.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                    <div class="session-topic"><strong>${s.topic}</strong></div>
+                    <div>
+                        <span class="session-hours">${s.hours}h</span>
+                        <span style="color: var(--color-text-secondary);">${s.notes.substring(0, 100)}${s.notes.length > 100 ? '...' : ''}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const sessions = getSessions();
+            const totalHours = sessions.reduce((sum, s) => sum + s.hours, 0);
+            const uniqueTopics = new Set(sessions.map(s => s.topic)).size;
+            
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const weeklyHours = sessions.filter(s => new Date(s.date) >= weekAgo).reduce((sum, s) => sum + s.hours, 0);
+
+            document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+            document.getElementById('sessionCount').textContent = sessions.length;
+            document.getElementById('topicCount').textContent = uniqueTopics;
+            document.getElementById('weeklyHours').textContent = weeklyHours.toFixed(1);
+            document.getElementById('progressFill').style.width = Math.min((weeklyHours / 20) * 100, 100) + '%';
+        }
+
+        function generateAIRecommendations() {
+            const sessions = getSessions();
+            if (sessions.length === 0) return;
+
+            const topics = sessions.slice(0, 3).map(s => s.topic).join(', ');
+            const recentHours = sessions.slice(0, 5).reduce((sum, s) => sum + s.hours, 0);
+
+            const recommendations = [
+                `📈 Great progress! You've logged ${recentHours}h in the last few sessions.`,
+                `🎯 Focus on ${topics} - consistency builds mastery for senior interviews.`,
+                `💡 Next: Dive deeper into AUTOSAR & functional safety (ISO 26262).`,
+                `⚡ Pro tip: Combine C++ coding with embedded systems theory daily.`,
+                `🔄 Review: Schedule weekly practice problems on LeetCode hard mode.`
+            ];
+
+            document.getElementById('aiRecommendations').innerHTML = 
+                recommendations.map(r => `<p style="margin: 6px 0; color: var(--color-text);">→ ${r}</p>`).join('');
+        }
+
+        function clearForm() {
+            document.getElementById('customTopic').value = '';
+            document.getElementById('sessionHours').value = '1';
+            document.getElementById('sessionNotes').value = '';
+            document.querySelectorAll('.topic-tag').forEach(tag => tag.classList.remove('selected'));
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alert.classList.remove('hidden');
+            setTimeout(() => alert.classList.add('hidden'), 4000);
+        }
+
+        // Init on load
+        init();
+    </script>
+</body>
+</html>
